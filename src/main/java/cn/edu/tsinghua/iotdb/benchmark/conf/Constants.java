@@ -8,8 +8,10 @@ import cn.edu.tsinghua.iotdb.benchmark.utils.TimeUtils;
 public class Constants {
     private static Config config = ConfigDescriptor.getInstance().getConfig();
     public static final long START_TIMESTAMP = TimeUtils.convertDateStrToTimestamp(config.START_TIME);
-    public static final long DELETE_START_TIMESTAMP = TimeUtils.convertDateStrToTimestamp(config.DELETE_START_TIME);
-    public static final long DELETE_END_TIMESTAMP = TimeUtils.convertDateStrToTimestamp(config.DELETE_END_TIME);
+    public static final long QUERY_START_TIMESTAMP = TimeUtils.convertDateStrToTimestamp(config.QUERY_START_TIME);
+    public static final long QUERY_END_TIMESTAMP = TimeUtils.convertDateStrToTimestamp(config.QUERY_END_TIME);
+    public static final long INSERT_END_TIMESTAMP = TimeUtils.convertDateStrToTimestamp(config.MID_END);
+    public static final long INSERT_RESTART_TIMESTAMP = TimeUtils.convertDateStrToTimestamp(config.MID_RESTART);
     public static final String URL = "jdbc:iotdb://%s:%s/";
     public static final String USER = "root";
     public static final String PASSWD = "root";

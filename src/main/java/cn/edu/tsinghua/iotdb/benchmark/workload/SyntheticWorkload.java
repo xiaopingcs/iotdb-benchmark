@@ -150,8 +150,11 @@ public class SyntheticWorkload implements IWorkload {
     long currentTimestamp = getCurrentTimestamp(stepOffset);
     double timeValue = Long.valueOf(currentTimestamp).doubleValue();
     for(int i = 0;i < config.SENSOR_NUMBER;i++) {
-      values.add(String.format(DECIMAL_FORMAT, timeValue));
-      //values.add(workloadValues[i][(int)(Math.abs(stepOffset) % config.WORKLOAD_BUFFER_SIZE)]);
+      if(config.IS_TIMESTAMP == true) {
+        values.add(String.format(DECIMAL_FORMAT, timeValue));
+      } else {
+        values.add(workloadValues[i][(int) (Math.abs(stepOffset) % config.WORKLOAD_BUFFER_SIZE)]);
+      }
     }
     batch.add(currentTimestamp, values);
   }
@@ -184,12 +187,8 @@ public class SyntheticWorkload implements IWorkload {
       List<String> sensors = deviceSchema.getSensors();
       //Collections.shuffle(sensors, queryDeviceRandom);
       List<String> querySensors = new ArrayList<>();
-      if (config.IS_DELETING == false) {
-        for (int i = 0; i < config.QUERY_SENSOR_NUM; i++) {
-          querySensors.add(sensors.get(i));
-        }
-      } else {
-        querySensors.add(sensors.get(0));
+      for (int i = 0; i < config.QUERY_SENSOR_NUM; i++) {
+        querySensors.add(sensors.get(i));
       }
       deviceSchema.setSensors(querySensors);
       queryDevices.add(deviceSchema);

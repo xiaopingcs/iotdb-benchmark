@@ -27,6 +27,8 @@ import java.util.HashMap;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
+
+import com.sun.xml.bind.v2.runtime.reflect.opt.Const;
 import org.kairosdb.client.HttpClient;
 import org.kairosdb.client.builder.Aggregator;
 import org.kairosdb.client.builder.AggregatorFactory;
@@ -156,8 +158,15 @@ public class KairosDB implements IDatabase {
 
   @Override
   public Status rangeQuery(RangeQuery rangeQuery) {
-    long startTime = rangeQuery.getStartTimestamp();
-    long endTime = rangeQuery.getEndTimestamp();
+    long startTime;
+    long endTime;
+    if (config.IS_QUERYING){
+      startTime = Constants.QUERY_START_TIMESTAMP;
+      endTime = Constants.QUERY_END_TIMESTAMP;
+    } else {
+      startTime = rangeQuery.getStartTimestamp();
+      endTime = rangeQuery.getEndTimestamp();
+    }
     QueryBuilder builder = constructBuilder(startTime, endTime, rangeQuery.getDeviceSchema());
     return executeOneQuery(builder, false);
   }
@@ -175,8 +184,15 @@ public class KairosDB implements IDatabase {
 
   @Override
   public Status aggRangeQuery(AggRangeQuery aggRangeQuery) {
-    long startTime = aggRangeQuery.getStartTimestamp();
-    long endTime = aggRangeQuery.getEndTimestamp();
+    long startTime;
+    long endTime;
+    if (config.IS_QUERYING){
+      startTime = Constants.QUERY_START_TIMESTAMP;
+      endTime = Constants.QUERY_END_TIMESTAMP;
+    } else {
+      startTime = aggRangeQuery.getStartTimestamp();
+      endTime = aggRangeQuery.getEndTimestamp();
+    }
     QueryBuilder builder = constructBuilder(startTime, endTime, aggRangeQuery.getDeviceSchema());
     // convert to second
     int timeInterval = (int) (endTime - startTime) + 1;
@@ -227,7 +243,7 @@ public class KairosDB implements IDatabase {
   @Override
   public Status latestPointQuery(LatestPointQuery latestPointQuery) {
     //latestPointQuery
-    if (config.IS_DELETING == false) {
+    if (config.IS_QUERYING == false) {
       long startTime = latestPointQuery.getStartTimestamp();
       long endTime = latestPointQuery.getEndTimestamp();
       QueryBuilder builder = constructBuilder(startTime, endTime, latestPointQuery.getDeviceSchema());
@@ -236,8 +252,8 @@ public class KairosDB implements IDatabase {
       return executeOneQuery(builder, true);
     }
     else {
-      long startTime = Constants.DELETE_START_TIMESTAMP;
-      long endTime = Constants.DELETE_END_TIMESTAMP;
+      long startTime = Constants.QUERY_START_TIMESTAMP;
+      long endTime = Constants.QUERY_END_TIMESTAMP;
       QueryBuilder builder = constructBuilder(startTime, endTime, latestPointQuery.getDeviceSchema());
       return executeOneDelete(builder);
     }
@@ -247,29 +263,46 @@ public class KairosDB implements IDatabase {
     LOGGER.debug("[JSON] {}", builder);
     int queryResultPointNum = 0;
     try {
-      long startTime = builder.getStartAbsolute().getTime();
-      long endTime = builder.getEndAbsolute().getTime();
       QueryResponse response = client.query(builder);
 
       // confirm the result is the willing result
       for (QueryResult query : response.getQueries()) {
         for (Result result : query.getResults()) {
-          if(config.IS_DELETED == true) {
-            if (result.getName() == "s_0") {
-              throw new Exception("Get the deleted sensor");
-            }
-          }
           int resSize = result.getDataPoints().size();
           queryResultPointNum += resSize;
+          if (config.IS_QUERYING) {
+            if (config.IS_DELETED) {
+              if (result.getName().equals("s_0") && resSize != 0) {
+                throw new Exception("Get the deleted sensor, the size is" + resSize);
+              }
+            }
+            else if (!isAggregate) {
+              if (Math.abs(expectedDataValue("count") - resSize) > 0.001) {
+                throw new Exception("The data number is wrong in name:" + result.getName() +
+                        " and tag:" + result.getTags() + ",the expected value is "
+                        + Math.abs(expectedDataValue("count")) + ", real is "+ resSize);
+              }
+            }
+          }
           for (int i = 0; i < resSize; i++) {
             DataPoint data = result.getDataPoints().get(i);
-            if (isAggregate == true) {
-
-            } else {
-		/*
-              if (data.getTimestamp() != data.longValue()) {
-                throw new Exception("Insert the wrong data");
-              }*/
+            if (config.IS_QUERYING) {
+              if (isAggregate) {
+                Double doubleValue = Double.valueOf(String.valueOf(data.getValue()));
+                String aggFunc = config.QUERY_AGGREGATE_FUN.toLowerCase();
+                Double expectResult = expectedDataValue(aggFunc);
+                if (Math.abs(expectResult - doubleValue) > 0.001) {
+                  throw new Exception("The query result wrong in " +
+                          aggFunc + " agg func, the result value is "
+                          + doubleValue + ", the expected value is " + expectResult
+                          + ",resultName is " + result.getName() + ",resultTag is "
+                          + result.getTags());
+                }
+              } else {
+                if (data.getTimestamp() != data.longValue()) {
+                  throw new Exception("Query result error in basic query");
+                }
+              }
             }
           }
         }
@@ -310,5 +343,45 @@ public class KairosDB implements IDatabase {
         queryMetric.addAggregator(aggregator);
       }
     });
+  }
+
+  private double expectedDataValue(String aggFunc) {
+      long startTime = Constants.QUERY_START_TIMESTAMP;
+      long endTime = Constants.QUERY_END_TIMESTAMP;
+      long insertEnd = Constants.INSERT_END_TIMESTAMP;
+      long insertRestart = Constants.INSERT_RESTART_TIMESTAMP;
+      long insert_offset = config.POINT_STEP;
+      if (config.IS_DOUBLE_DATA) {
+          switch (aggFunc) {
+              case "count":
+                  return (double)(insertEnd - startTime + endTime - insertRestart) / insert_offset + 2;
+              case "max":
+              case "last":
+                  return endTime;
+              case "min":
+              case "first":
+                  return startTime;
+              case "avg":
+                 // TODO Fix the calculate bug
+                  return (double)(insertEnd + startTime + endTime + insertRestart) / 4;
+              default:
+                  return 0;
+          }
+      } else {
+          switch (aggFunc) {
+              case "count":
+                  return (double)(endTime - startTime) / insert_offset + 1;
+              case "max":
+              case "last":
+                  return endTime;
+              case "min":
+              case "first":
+                  return startTime;
+              case "avg":
+                  return (double)(startTime + endTime) / 2;
+              default:
+                  return 0;
+          }
+      }
   }
 }

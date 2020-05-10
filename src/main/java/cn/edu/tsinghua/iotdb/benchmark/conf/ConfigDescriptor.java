@@ -67,10 +67,15 @@ public class ConfigDescriptor {
 				}
 
 				config.IS_DELETED = Boolean.parseBoolean(properties.getProperty("IS_DELETED", config.IS_DELETED+""));
-				config.IS_DELETING = Boolean.parseBoolean(properties.getProperty("IS_DELETING", config.IS_DELETING+""));
-				config.DELETE_START_TIME = properties.getProperty("DELETE_START_TIME", config.DELETE_START_TIME);
-				config.DELETE_END_TIME = properties.getProperty("DELETE_END_TIME", config.DELETE_END_TIME);
+				config.IS_QUERYING = Boolean.parseBoolean(properties.getProperty("IS_QUERYING", config.IS_QUERYING+""));
+				config.IS_DOUBLE_DATA = Boolean.parseBoolean(properties.getProperty("IS_DOUBLE_DATA", config.IS_DOUBLE_DATA+""));
+				config.IS_TIMESTAMP = Boolean.parseBoolean(properties.getProperty("IS_TIMESTAMP", config.IS_TIMESTAMP+""));
+				config.QUERY_START_TIME = properties.getProperty("QUERY_START_TIME", config.QUERY_START_TIME);
+				config.QUERY_END_TIME = properties.getProperty("QUERY_END_TIME", config.QUERY_END_TIME);
+				config.MID_END = properties.getProperty("MID_END", config.MID_END);
+				config.MID_RESTART = properties.getProperty("MID_RESTART", config.MID_RESTART);
 
+				config.POINT_STEP = Long.parseLong(properties.getProperty("POINT_STEP", config.POINT_STEP+""));
 				config.POINT_STEP = Long.parseLong(properties.getProperty("POINT_STEP", config.POINT_STEP+""));
 				config.BATCH_SIZE = Integer.parseInt(properties.getProperty("BATCH_SIZE", config.BATCH_SIZE +""));
 				config.SG_STRATEGY = properties.getProperty("SG_STRATEGY", "hash");
