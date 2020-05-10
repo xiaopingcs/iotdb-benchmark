@@ -28,7 +28,6 @@ import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
 
-import com.sun.xml.bind.v2.runtime.reflect.opt.Const;
 import org.kairosdb.client.HttpClient;
 import org.kairosdb.client.builder.Aggregator;
 import org.kairosdb.client.builder.AggregatorFactory;
