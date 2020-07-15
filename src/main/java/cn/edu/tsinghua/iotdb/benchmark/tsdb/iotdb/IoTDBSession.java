@@ -97,7 +97,7 @@ public class IoTDBSession extends IoTDB {
       }
     }
     try {
-      session.insertTablet(tablet);
+      session.insertTablet(tablet, true);
       tablet.reset();
       return new Status(true);
     } catch (IoTDBConnectionException | BatchExecutionException e) {
