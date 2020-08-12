@@ -43,6 +43,7 @@ public class Constants {
     //different insert mode
     public static final String INSERT_USE_JDBC = "jdbc";
     public static final String INSERT_USE_SESSION = "session";
+    public static final String INSERT_USE_SESSION_POOL = "session_pool";
 
     // support test data persistence:
     public static final String TDP_NONE = "None";
