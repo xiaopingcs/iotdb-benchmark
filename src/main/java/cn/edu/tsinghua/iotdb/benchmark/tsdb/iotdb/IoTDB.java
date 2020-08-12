@@ -33,7 +33,7 @@ import org.slf4j.LoggerFactory;
 public class IoTDB implements IDatabase {
 
   private static final Logger LOGGER = LoggerFactory.getLogger(IoTDB.class);
-  private static Config config = ConfigDescriptor.getInstance().getConfig();
+  protected static Config config = ConfigDescriptor.getInstance().getConfig();
 
   private static final String CREATE_SERIES_SQL =
       "CREATE TIMESERIES %s WITH DATATYPE=%s,ENCODING=%s,COMPRESSOR=%s";

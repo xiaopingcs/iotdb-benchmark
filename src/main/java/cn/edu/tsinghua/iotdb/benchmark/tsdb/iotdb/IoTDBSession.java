@@ -1,7 +1,5 @@
 package cn.edu.tsinghua.iotdb.benchmark.tsdb.iotdb;
 
-import cn.edu.tsinghua.iotdb.benchmark.conf.Config;
-import cn.edu.tsinghua.iotdb.benchmark.conf.ConfigDescriptor;
 import cn.edu.tsinghua.iotdb.benchmark.conf.Constants;
 import cn.edu.tsinghua.iotdb.benchmark.measurement.Status;
 import cn.edu.tsinghua.iotdb.benchmark.tsdb.DBUtil;
@@ -23,20 +21,21 @@ import org.slf4j.LoggerFactory;
 public class IoTDBSession extends IoTDB {
 
   private static final Logger LOGGER = LoggerFactory.getLogger(IoTDBSession.class);
-  private static Config config = ConfigDescriptor.getInstance().getConfig();
   private Session session;
 
-  public IoTDBSession() {
+  public IoTDBSession(boolean initSession) {
     super();
-    session = new Session(config.HOST, config.PORT, Constants.USER, Constants.PASSWD);
-    try {
-      if (config.ENABLE_THRIFT_COMPRESSION) {
-        session.open(true);
-      } else {
-        session.open();
+    if (initSession) {
+      session = new Session(config.HOST, config.PORT, Constants.USER, Constants.PASSWD);
+      try {
+        if (config.ENABLE_THRIFT_COMPRESSION) {
+          session.open(true);
+        } else {
+          session.open();
+        }
+      } catch (IoTDBConnectionException e) {
+        LOGGER.error("Failed to add session", e);
       }
-    } catch (IoTDBConnectionException e) {
-      LOGGER.error("Failed to add session", e);
     }
   }
 
@@ -98,12 +97,17 @@ public class IoTDBSession extends IoTDB {
       }
     }
     try {
-      session.insertTablet(tablet);
+      insertTablet(tablet);
       tablet.reset();
       return new Status(true);
     } catch (IoTDBConnectionException | StatementExecutionException e) {
       return new Status(false, 0, e, e.toString());
     }
+  }
+
+  protected void insertTablet(Tablet tablet)
+      throws StatementExecutionException, IoTDBConnectionException {
+    session.insertTablet(tablet);
   }
 
 }
