@@ -12,7 +12,7 @@ public class IoTDBSessionPool extends IoTDBSession {
 
   public IoTDBSessionPool() {
     super(false);
-    pool = new SessionPool(config.HOST, Integer.parseInt(config.PORT), Constants.USER, Constants.PASSWD, 1);
+    pool = new SessionPool(config.HOST, Integer.parseInt(config.PORT), Constants.USER, Constants.PASSWD, 1, config.ENABLE_THRIFT_COMPRESSION);
   }
 
   public void insertTablet(Tablet tablet)
