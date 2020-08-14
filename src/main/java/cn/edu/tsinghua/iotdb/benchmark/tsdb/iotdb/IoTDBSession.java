@@ -105,7 +105,7 @@ public class IoTDBSession extends IoTDB {
   }
 
   protected void insertTablet(Tablet tablet)
-      throws StatementExecutionException, IoTDBConnectionException {
+      throws IoTDBConnectionException, BatchExecutionException {
     session.insertTablet(tablet);
   }
 

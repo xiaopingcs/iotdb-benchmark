@@ -1,6 +1,7 @@
 package cn.edu.tsinghua.iotdb.benchmark.tsdb.iotdb;
 
 import cn.edu.tsinghua.iotdb.benchmark.conf.Constants;
+import org.apache.iotdb.rpc.BatchExecutionException;
 import org.apache.iotdb.rpc.IoTDBConnectionException;
 import org.apache.iotdb.rpc.StatementExecutionException;
 import org.apache.iotdb.session.pool.SessionPool;
@@ -16,7 +17,7 @@ public class IoTDBSessionPool extends IoTDBSession {
   }
 
   public void insertTablet(Tablet tablet)
-      throws StatementExecutionException, IoTDBConnectionException {
+      throws IoTDBConnectionException, BatchExecutionException {
     pool.insertTablet(tablet);
   }
 
