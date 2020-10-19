@@ -3,6 +3,7 @@ package cn.edu.tsinghua.iotdb.benchmark.measurement.persistence.mysql;
 import cn.edu.tsinghua.iotdb.benchmark.conf.Config;
 import cn.edu.tsinghua.iotdb.benchmark.conf.ConfigDescriptor;
 import cn.edu.tsinghua.iotdb.benchmark.conf.Constants;
+import cn.edu.tsinghua.iotdb.benchmark.connection.ConnectionPoolUtils;
 import cn.edu.tsinghua.iotdb.benchmark.measurement.enums.SystemMetrics;
 import cn.edu.tsinghua.iotdb.benchmark.measurement.persistence.ITestDataPersistence;
 import java.net.InetAddress;
@@ -32,9 +33,9 @@ public class MySqlRecorder implements ITestDataPersistence {
   private static final long EXP_TIME = System.currentTimeMillis();
   private final String projectID = String.format("%s_%s_%s_%s",config.getBENCHMARK_WORK_MODE(), config.getDB_SWITCH(), config.getREMARK(), sdf.format(new java.util.Date(EXP_TIME)));
   private Statement statement;
-  private static final String URL_TEMPLATE = "jdbc:mysql://%s:%s/%s?user=%s&password=%s&useUnicode=true&characterEncoding=UTF8&useSSL=false&rewriteBatchedStatements=true";
+  private static final String URL_TEMPLATE = "jdbc:mysql://%s:%s/%s?useUnicode=true&characterEncoding=UTF8&useSSL=false&rewriteBatchedStatements=true";
   private final String url = String.format(URL_TEMPLATE, config.getTEST_DATA_STORE_IP(),
-      config.getTEST_DATA_STORE_PORT(), config.getTEST_DATA_STORE_DB(), config.getTEST_DATA_STORE_USER(), config.getTEST_DATA_STORE_PW());
+      config.getTEST_DATA_STORE_PORT(), config.getTEST_DATA_STORE_DB());
   private long count = 0;
 
   public MySqlRecorder() {
@@ -52,7 +53,7 @@ public class MySqlRecorder implements ITestDataPersistence {
     day = dateFormat.format(date);
     try {
       Class.forName(Constants.MYSQL_DRIVENAME);
-      mysqlConnection = DriverManager.getConnection(url);
+      mysqlConnection = ConnectionPoolUtils.getPoolInstance(url, config.getTEST_DATA_STORE_USER(), config.getTEST_DATA_STORE_PW(), Constants.MYSQL_DRIVENAME).getConnection();
       initTable();
       statement = mysqlConnection.createStatement();
     } catch (SQLException e) {
